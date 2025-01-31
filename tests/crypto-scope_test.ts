@@ -83,3 +83,39 @@ Clarinet.test({
     alerts.result.expectOk();
   },
 });
+
+Clarinet.test({
+  name: "Can log activity with description",
+  async fn(chain: Chain, accounts: Map<string, Account>) {
+    const deployer = accounts.get("deployer")!;
+    const wallet1 = accounts.get("wallet_1")!;
+    const wallet2 = accounts.get("wallet_2")!;
+    
+    let block = chain.mineBlock([
+      Tx.contractCall(
+        "crypto-scope",
+        "log-activity",
+        [
+          types.principal(wallet1.address),
+          types.ascii("TRANSFER"),
+          types.uint(1000),
+          types.some(types.principal(wallet2.address)),
+          types.some(types.ascii("Test transfer"))
+        ],
+        deployer.address
+      )
+    ]);
+    
+    assertEquals(block.receipts.length, 1);
+    block.receipts[0].result.expectOk();
+    
+    let activity = chain.callReadOnlyFn(
+      "crypto-scope",
+      "get-activity",
+      [types.principal(wallet1.address)],
+      deployer.address
+    );
+    
+    activity.result.expectOk();
+  },
+});
