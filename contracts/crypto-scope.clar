@@ -3,7 +3,7 @@
 ;; Constants
 (define-constant contract-owner tx-sender)
 (define-constant err-unauthorized (err u100))
-(define-constant err-invalid-params (err u101))
+(define-constant err-invalid-params (err u101)) 
 (define-constant err-not-found (err u102))
 
 ;; Data structures
@@ -21,7 +21,8 @@
   {
     tx-type: (string-ascii 20),
     amount: uint,
-    counter-party: (optional principal)
+    counter-party: (optional principal),
+    description: (optional (string-ascii 100))  ;; Added optional description field
   }
 )
 
@@ -35,7 +36,7 @@
   }
 )
 
-;; State variables
+;; State variables 
 (define-data-var alert-counter uint u0)
 
 ;; Public functions
@@ -68,6 +69,21 @@
         }
       ))
     )
+  )
+)
+
+(define-public (log-activity (address principal) (tx-type (string-ascii 20)) (amount uint) (counter-party (optional principal)) (description (optional (string-ascii 100))))
+  (begin
+    (asserts! (is-eq tx-sender contract-owner) err-unauthorized)
+    (ok (map-set activity-logs
+      { address: address, timestamp: block-height }
+      {
+        tx-type: tx-type,
+        amount: amount,
+        counter-party: counter-party,
+        description: description
+      }
+    ))
   )
 )
 
